@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-service-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: chat-service
+  template:
+    metadata:
+      labels:
+        component: chat-service
+    spec:
+      containers:
+        - name: chat-service
+          image: vikramhemchandar/streamingapp:chatv1.0
+          ports:
+            - containerPort: 3004
+          envFrom:
+            - configMapRef:
+                name: configmap
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: CHAT_PORT
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: JWT_SECRET
+            - name: CLIENT_URLS
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: CLIENT_URLS
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_REGION
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_S3_BUCKET
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3004
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3004
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+spec:
+  type: ClusterIP
+  selector:
+    component: chat
+  ports:
+    - port: 3004
+      targetPort: 3004

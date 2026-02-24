@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: frontend
+  template:
+    metadata:
+      labels:
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: vikramhemchandar/streamingapp:frontendv1.0
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: configmap
+          env:
+            - name: REACT_APP_AUTH_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: REACT_APP_AUTH_API_URL
+            - name: REACT_APP_STREAMING_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: REACT_APP_STREAMING_API_URL
+            - name: REACT_APP_STREAMING_PUBLIC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: REACT_APP_STREAMING_PUBLIC_URL
+            - name: REACT_APP_ADMIN_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: REACT_APP_ADMIN_API_URL
+            - name: REACT_APP_CHAT_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: REACT_APP_CHAT_API_URL
+            - name: REACT_APP_CHAT_SOCKET_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: REACT_APP_CHAT_SOCKET_URL
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: NodePort
+  selector:
+    component: frontend
+  ports:
+    - port: 3000
+      targetPort: 80

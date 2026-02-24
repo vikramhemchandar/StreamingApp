@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap
+  labels:
+    app: configMap
+data:
+  # Port configurations
+  AUTH_PORT: "3001"
+  STREAMING_PORT: "3002"
+  ADMIN_PORT: "3003"
+  CHAT_PORT: "3004"
+  
+  # Shared backend configurations
+  MONGO_URI: "mongodb://database-service:27017/streamingapp"
+  JWT_SECRET: "changeme"
+  CLIENT_URLS: "http://localhost:3000"
+  
+  # AWS configurations
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+  AWS_REGION: "ap-south-1"
+  AWS_S3_BUCKET: ""
+  AWS_CDN_URL: ""
+  
+  # Specific backend configurations
+  STREAMING_PUBLIC_URL: "http://localhost:3002"
+
+  # Frontend configurations
+  REACT_APP_AUTH_API_URL: "http://localhost:3001/api"
+  REACT_APP_STREAMING_API_URL: "http://localhost:3002/api"
+  REACT_APP_STREAMING_PUBLIC_URL: "http://localhost:3002"
+  REACT_APP_ADMIN_API_URL: "http://localhost:3003/api/admin"
+  REACT_APP_CHAT_API_URL: "http://localhost:3004/api/chat"
+  REACT_APP_CHAT_SOCKET_URL: "http://localhost:3004"

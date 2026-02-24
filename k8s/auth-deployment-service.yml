@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: auth-service
+  template:
+    metadata:
+      labels:
+        component: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: vikramhemchandar/streamingapp:authv1.0
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: configmap
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AUTH_PORT
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: JWT_SECRET
+            - name: CLIENT_URLS
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: CLIENT_URLS
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_REGION
+            - name: AWS_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap
+                  key: AWS_S3_BUCKET
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-service
+spec:
+  type: ClusterIP
+  selector:
+    component: auth-service
+  ports:
+    - port: 3001
+      targetPort: 3001
