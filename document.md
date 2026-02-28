@@ -239,3 +239,56 @@ spec:
 
 ### Summary of How Traffic Flows in the Frontend
 User's Browser `(localhost:3000)` ➡️ `Service named 'frontend' (port: 3000)` ➡️ `Frontend Pod container (targetPort: 80)` ➡️ React App is Served!
+
+---
+
+## 🚦 6. The Ingress: The Master Traffic Cop (Single Port Entry)
+**File:** `ingress.yml`  
+**Purpose:** Without an Ingress, you have to run `kubectl port-forward` manually for the Frontend (3000), Auth (3001), Streaming (3002), etc. An Ingress acts as a "Reverse Proxy." It opens **one single port** (usually Port 80 for HTTP) and intelligently routes the traffic to the correct Service based on the URL path the user types in!
+
+*Prerequisite: Your cluster must have an Ingress Controller installed (like NGINX Ingress Controller).*
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streamingapp-ingress
+  annotations:                    # 1. "Annotations" are special instructions for the Ingress Controller
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - host: localhost             # 2. Only listen to traffic heading to 'http://localhost'
+      http:
+        paths:
+          
+          # --- BACKEND ROUTES ---
+          - path: /api/auth(/|$)(.*) # 3. If someone goes to http://localhost/api/auth/login...
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service-service 
+                port:
+                  number: 3001    # 4. ...Secretly send them here to the Auth Service!
+          
+          - path: /api/streaming(/|$)(.*) # 5. Same logic for Streaming!
+            pathType: Prefix
+            backend:
+              service:
+                name: streaming-service
+                port:
+                  number: 3002
+
+          # ... (Similar blocks exist for Admin and Chat services) ...
+
+          # --- FRONTEND ROUTE (Catch-All) ---
+          - path: /()(.*)         # 6. If the URL DID NOT start with /api/...
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80      # 7. ...Assume they want the webpage, send them to the React app!
+```
+
+### Summary of How Ingress Traffic Flows
+User clicks Login ➡️ Browser hits `http://localhost/api/auth/login` ➡️ Ingress sees `/api/auth` ➡️ Forwards secretly to `auth-service-service:3001/login`.

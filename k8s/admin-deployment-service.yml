@@ -106,5 +106,5 @@ spec:
   selector:
     component: admin-service
   ports:
-    - port: 3000
-      targetPort: 3000
+    - port: 3003
+      targetPort: 3003

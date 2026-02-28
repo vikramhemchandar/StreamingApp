@@ -1,0 +1,67 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streamingapp-ingress
+  annotations:
+    # This tells Kubernetes to use the NGINX Ingress Controller to manage this routing
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # Optional: Increases upload size limit for streaming/admin video uploads
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  rules:
+    # The domain name or IP address this Ingress will listen for. 
+    # For local testing, we use localhost.
+    - host: localhost
+      http:
+        paths:
+          # --- BACKEND ROUTES ---
+          # Route 1: Auth Service Traffic
+          # Any traffic hitting localhost/api/auth/... will be sent to auth-service on port 3001
+          - path: /api/auth(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service-service
+                port:
+                  number: 3001
+          
+          # Route 2: Streaming Service Traffic
+          # Any traffic hitting localhost/api/streaming/... will be sent to streaming-service on port 3002
+          - path: /api/streaming(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: streaming-service
+                port:
+                  number: 3002
+
+          # Route 3: Admin Service Traffic
+          # Any traffic hitting localhost/api/admin/... will be sent to admin-service on port 3003
+          - path: /api/admin(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-service-service
+                port:
+                  number: 3003
+          
+          # Route 4: Chat Service Traffic
+          # Any traffic hitting localhost/api/chat/... will be sent to chat-service on port 3004
+          - path: /api/chat(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service
+                port:
+                  number: 3004
+
+          # --- FRONTEND ROUTE (Must be last!) ---
+          # Route 5: The React Frontend
+          # If the URL doesn't match any of the /api/* paths above, assume it's a user trying to load the website UI
+          - path: /()(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

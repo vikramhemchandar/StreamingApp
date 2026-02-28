@@ -94,7 +94,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    component: chat
+    component: chat-service
   ports:
     - port: 3004
       targetPort: 3004
