@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: chat-service
-          image: vikramhemchandar/streamingapp:chatv1.0
+          image: vikramhemchandar/streamingapp:chatv1.1
           ports:
             - containerPort: 3004
           envFrom:

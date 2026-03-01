@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: vikramhemchandar/streamingapp:authv1.0
+          image: vikramhemchandar/streamingapp:authv1.1
           ports:
             - containerPort: 3001
           envFrom:

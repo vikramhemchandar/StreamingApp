@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: streaming-service
-          image: vikramhemchandar/streamingapp:streamingv1.0
+          image: vikramhemchandar/streamingapp:streamingv1.1
           ports:
             - containerPort: 3002
           envFrom:

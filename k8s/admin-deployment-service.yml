@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: admin-service
-          image: vikramhemchandar/streamingapp:adminv1.0
+          image: vikramhemchandar/streamingapp:adminv1.1
           ports:
             - containerPort: 3003
           envFrom:

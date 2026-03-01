@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: vikramhemchandar/streamingapp:frontendv1.0
+          image: vikramhemchandar/streamingapp:frontendv1.1
           ports:
             - containerPort: 80
           envFrom:
