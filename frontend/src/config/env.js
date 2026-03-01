@@ -3,9 +3,17 @@ const getEnv = (key, fallback) => {
   return value === undefined || value === '' ? fallback : value;
 };
 
-export const AUTH_API_URL = getEnv('REACT_APP_AUTH_API_URL', 'http://localhost:3001/api');
-export const STREAMING_API_URL = getEnv('REACT_APP_STREAMING_API_URL', 'http://localhost:3002/api');
-export const STREAMING_PUBLIC_URL = getEnv('REACT_APP_STREAMING_PUBLIC_URL', 'http://localhost:3002');
-export const ADMIN_API_URL = getEnv('REACT_APP_ADMIN_API_URL', 'http://localhost:3003/api/admin');
-export const CHAT_API_URL = getEnv('REACT_APP_CHAT_API_URL', 'http://localhost:3004/api/chat');
-export const CHAT_SOCKET_URL = getEnv('REACT_APP_CHAT_SOCKET_URL', 'http://localhost:3004');
+// export const AUTH_API_URL = getEnv('REACT_APP_AUTH_API_URL', 'http://localhost:3001/api');
+// export const STREAMING_API_URL = getEnv('REACT_APP_STREAMING_API_URL', 'http://localhost:3002/api');
+// export const STREAMING_PUBLIC_URL = getEnv('REACT_APP_STREAMING_PUBLIC_URL', 'http://localhost:3002');
+// export const ADMIN_API_URL = getEnv('REACT_APP_ADMIN_API_URL', 'http://localhost:3003/api/admin');
+// export const CHAT_API_URL = getEnv('REACT_APP_CHAT_API_URL', 'http://localhost:3004/api/chat');
+// export const CHAT_SOCKET_URL = getEnv('REACT_APP_CHAT_SOCKET_URL', 'http://localhost:3004');
+// All traffic now flows through default port 80 (Ingress)
+
+export const AUTH_API_URL = getEnv('REACT_APP_AUTH_API_URL', 'http://localhost/api/auth');
+export const STREAMING_API_URL = getEnv('REACT_APP_STREAMING_API_URL', 'http://localhost/api/streaming');
+export const STREAMING_PUBLIC_URL = getEnv('REACT_APP_STREAMING_PUBLIC_URL', 'http://localhost');
+export const ADMIN_API_URL = getEnv('REACT_APP_ADMIN_API_URL', 'http://localhost/api/admin');
+export const CHAT_API_URL = getEnv('REACT_APP_CHAT_API_URL', 'http://localhost/api/chat');
+export const CHAT_SOCKET_URL = getEnv('REACT_APP_CHAT_SOCKET_URL', 'http://localhost');
