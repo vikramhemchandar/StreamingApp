@@ -2,6 +2,17 @@
 
 This document outlines the architecture and installation steps required to set up a complete CI/CD pipeline for the StreamingApp using GitHub, Jenkins, Docker, Amazon ECR, and Argo CD.
 
+## Prerequisites
+
+Before setting up the CI/CD pipeline, ensure you have the following tools and accounts configured on your local machine. If you are missing any of these tools, refer to the [Tools Installation Guide](#tools-installation-guide-macos) below.
+
+*   **Docker Desktop**: Required to run Jenkins locally and to provide a local Kubernetes cluster for Argo CD.
+*   **Kubernetes (enabled via Docker Desktop)**: The local cluster where Argo CD and eventually your application will reside.
+*   **AWS Account**: An active AWS account with an IAM user that has access to Amazon ECR.
+*   **AWS CLI**: Required to authenticate Docker with Amazon ECR.
+*   **Git CLI**: For version control and pushing manifests to GitHub.
+*   **GitHub Account**: For hosting the source code and the Kubernetes manifests.
+
 ## CI/CD Architecture Flow
 
 The following diagram illustrates the GitOps methodology used for continuous integration and continuous deployment.
