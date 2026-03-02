@@ -113,10 +113,11 @@ pipeline {
                         git config user.email "vikramhemchandar@gmail.com"
                         git config user.name "Vikram Hem Chandar"
 
-                        sed -i "s,image: ${ECR_REGISTRY}/auth:.*,image: ${ECR_REGISTRY}/auth:${IMAGE_TAG}," k8s/auth-deployment-service.yml
+                        sed -i "s|image: .*|image: ${ECR_REGISTRY}/auth:${IMAGE_TAG}|g" k8s/auth-deployment-service.yml
 
                         git add k8s/auth-deployment-service.yml
-                        git commit -m "Update deployment image to version ${IMAGE_TAG}"
+                        # Added '|| true' so the pipeline doesn't crash if the file is already up to date!
+                        git commit -m "Update deployment image to version ${IMAGE_TAG}" || true
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                     '''
                 }   
