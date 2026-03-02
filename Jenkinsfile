@@ -55,6 +55,20 @@ pipeline {
         stage('Deploy (Update Kubernetes Manifests)') {
             steps {
                 script {
+                    sh """
+                    # Bypass the Git security block first
+                    git config --global --add safe.directory '*'
+                    
+                    # Setup Git identity
+                    git config user.name "Vikram Hem Chandar"
+                    git config user.email "vikramhemchandar@gmail.com"
+                    
+                    # FIXED: Checkout the main branch locally BEFORE modifying files
+                    git checkout main
+                    # Pull any latest changes from GitHub just in case
+                    git pull origin main
+                    """
+
                     def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']
                     
                     for (String service : services) {
@@ -65,17 +79,6 @@ pipeline {
                     
                     sh """
                     echo "Updating K8s manifests for all services with tag: ${IMAGE_TAG}"
-                    
-                    # Bypass the Git security block!
-                    git config --global --add safe.directory '*'
-                    
-                    git config user.name "Vikram Hem Chandar"
-                    git config user.email "vikramhemchandar@gmail.com"
-                    
-                    # FIXED: Checkout the main branch locally so we aren't in a detached HEAD state!
-                    git checkout main
-                    # Pull any latest changes from GitHub just in case
-                    git pull origin main
                     
                     # Commit the changes (We added || true so it doesn't crash if no changes happened)
                     git commit -am 'WIP: update K8s manifests for all services with tag: ${IMAGE_TAG}' || true
