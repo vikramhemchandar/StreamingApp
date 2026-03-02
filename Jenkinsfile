@@ -28,6 +28,7 @@ pipeline {
                         "TAG=-${IMAGE_TAG}"
                     ]) {
                         sh 'docker-compose -f docker-compose.yml build'
+                        sh 'echo "Build completed successfully for tag: ${IMAGE_TAG}"'
                     }
                 }
             }
