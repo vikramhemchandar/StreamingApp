@@ -25,7 +25,7 @@ kubectl delete pv --all
 
 Port Forward
 kubectl port-forward svc/frontend 3000:3000
-kubectl port-forward svc/frontend 3001:3001
+kubectl port-forward svc/auth-service-service 3001:3001
 kubectl port-forward svc/streaming-service 3002:3002
 kubectl port-forward svc/admin-service-service 3003:3003
 kubectl port-forward svc/chat-service 3004:3004
