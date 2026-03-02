@@ -103,6 +103,8 @@ pipeline {
             }
             steps {
                 // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
+                //  sed -i "s/replaceImageTag/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
+
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
                         # Bypass the Git security block first
@@ -111,8 +113,8 @@ pipeline {
                         git config user.email "vikramhemchandar@gmail.com"
                         git config user.name "Vikram Hem Chandar"
 
-                        #sed -i "s/replaceImageTag/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
                         sed -i "s,image: ${ECR_REGISTRY}/auth:.*,image: ${ECR_REGISTRY}/auth:${IMAGE_TAG}," k8s/auth-deployment-service.yml
+
                         git add k8s/auth-deployment-service.yml
                         git commit -m "Update deployment image to version ${IMAGE_TAG}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
