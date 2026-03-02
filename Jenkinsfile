@@ -101,6 +101,9 @@ pipeline {
                 // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
+                        # Bypass the Git security block first
+                        git config --global --add safe.directory '*'
+                        
                         git config user.email "vikramhemchandar@gmail.com"
                         git config user.name "Vikram Hem Chandar"
                         BUILD_NUMBER=${BUILD_NUMBER}
