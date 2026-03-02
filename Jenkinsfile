@@ -104,7 +104,7 @@ pipeline {
             steps {
                 // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    def prevBuild = currentBuild.previousBuild 
+                    def prevBuild = currentBuild.previousBuild.number
                     sh '''
                         # Bypass the Git security block first
                         git config --global --add safe.directory '*'
@@ -112,10 +112,10 @@ pipeline {
                         git config user.email "vikramhemchandar@gmail.com"
                         git config user.name "Vikram Hem Chandar"
 
-                        echo "Previous build number: ${prevBuild.number}"
+                        echo "Previous build number: ${prevBuild}"
                         echo "Current build number: ${IMAGE_TAG}"
 
-                        sed -i "s/${prevBuild.number}/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
+                        sed -i "s/${prevBuild}/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
                         git add k8s/auth-deployment-service.yml
                         git commit -m "Update deployment image to version ${IMAGE_TAG}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
