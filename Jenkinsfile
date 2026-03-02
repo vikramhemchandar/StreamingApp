@@ -59,10 +59,11 @@ pipeline {
                         sh "find k8s -name '*.yaml' -type f -exec sed -i \"s|image: .*/${ECR_REPO}:${service}-.*|image: ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}|\" {} +"
                     }
                     
-                    sh "git config user.name 'Vikram Hem Chandar'"
-                    sh "git config user.email 'vikramhemchandar@gmail.com'"
-                    
-                    sh "git commit -am 'Update K8s manifests for all services with tag: ${IMAGE_TAG}'"
+                    sh '''
+                    git config user.name 'Vikram Hem Chandar'
+                    git config user.email 'vikramhemchandar@gmail.com'
+                    git commit -am 'Update K8s manifests for all services with tag: ${IMAGE_TAG}'
+                    '''
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                         sh "git push origin main"
