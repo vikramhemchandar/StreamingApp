@@ -44,6 +44,7 @@ pipeline {
                         sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
                         def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
                         for (String service : services) {
+                            sh "echo 'Pushing ${ECR_REGISTRY}/${service}:${IMAGE_TAG}'"
                             sh "docker push ${ECR_REGISTRY}/${service}:${IMAGE_TAG}"
                             sh "echo 'Pushed ${ECR_REGISTRY}/${service}:${IMAGE_TAG}'"
                         }
