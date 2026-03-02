@@ -60,7 +60,7 @@ pipeline {
                     }
                     
                     sh "git config user.name 'Vikram Hem Chandar'"
-                    sh "git config user.email 'vikramhemchandar@gmail.com''"
+                    sh "git config user.email 'vikramhemchandar@gmail.com'"
                     
                     sh "git commit -am 'Update K8s manifests for all services with tag: ${IMAGE_TAG}'"
                     
