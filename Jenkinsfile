@@ -98,7 +98,7 @@ pipeline {
                 GIT_USER_NAME = "vikramhemchandar"
             }
             steps {
-                //withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+                // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
                         git config user.email "vikramhemchandar@gmail.com"
