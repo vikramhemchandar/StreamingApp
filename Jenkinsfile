@@ -25,7 +25,7 @@ pipeline {
                 script {
                     withEnv([
                         "DOCKER_USER=${ECR_REGISTRY}/${ECR_REPO}",
-                        "TAG=-${IMAGE_TAG}"
+                        "TAG=${IMAGE_TAG}"
                     ]) {
                         sh 'docker-compose -f docker-compose.yml build'
                         sh 'echo "Build completed successfully for tag: ${IMAGE_TAG}"'
@@ -100,6 +100,7 @@ pipeline {
             environment {
                 GIT_REPO_NAME = "StreamingApp"
                 GIT_USER_NAME = "vikramhemchandar"
+                def prevBuild = currentBuild.previousBuild 
             }
             steps {
                 // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
@@ -110,7 +111,11 @@ pipeline {
                         
                         git config user.email "vikramhemchandar@gmail.com"
                         git config user.name "Vikram Hem Chandar"
-                        sed -i "s/replaceImageTag/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
+
+                        echo "Previous build number: ${prevBuild.number}"
+                        echo "Current build number: ${IMAGE_TAG}"
+
+                        sed -i "s/${prevBuild.number}/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
                         git add k8s/auth-deployment-service.yml
                         git commit -m "Update deployment image to version ${IMAGE_TAG}"
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
