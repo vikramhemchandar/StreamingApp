@@ -29,6 +29,9 @@ pipeline {
                     ]) {
                         sh 'docker-compose -f docker-compose.yml build'
                         sh 'echo "Build completed successfully for tag: ${IMAGE_TAG}"'
+                        sh 'docker images'
+                        sh 'echo "DOCKER_USER: ${DOCKER_USER}"'
+                        sh 'echo "TAG: ${TAG}"'
                     }
                 }
             }
