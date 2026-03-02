@@ -45,6 +45,7 @@ pipeline {
                         def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
                         for (String service : services) {
                             sh "docker push ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}"
+                            sh "echo 'Pushed ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}'"
                         }
                     }
                 }
