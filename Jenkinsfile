@@ -100,11 +100,11 @@ pipeline {
             environment {
                 GIT_REPO_NAME = "StreamingApp"
                 GIT_USER_NAME = "vikramhemchandar"
-                def prevBuild = currentBuild.previousBuild 
             }
             steps {
                 // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    def prevBuild = currentBuild.previousBuild 
                     sh '''
                         # Bypass the Git security block first
                         git config --global --add safe.directory '*'
