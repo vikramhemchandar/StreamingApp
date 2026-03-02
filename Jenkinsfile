@@ -81,7 +81,7 @@ pipeline {
                     git commit -am 'WIP: update K8s manifests for all services with tag: ${IMAGE_TAG}' || true
                     """
                     
-                    withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
+                    withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
                         sh "git push origin main"
                     }
                 }
