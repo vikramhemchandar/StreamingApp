@@ -8,7 +8,7 @@ pipeline {
     environment {
         AWS_REGION = 'ap-south-1' 
         ECR_REGISTRY = '796786461592.dkr.ecr.ap-south-1.amazonaws.com'
-        ECR_REPO = 'vikramhemchandar/streamingapp'        
+        ECR_REPO = 'vikramhemchandar-streamingapp'        
         IMAGE_TAG = "v1.0.${env.BUILD_ID}"
         AWS_CREDS_ID = 'aws-credentials'
     }
@@ -44,8 +44,8 @@ pipeline {
                         sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
                         def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
                         for (String service : services) {
-                            sh "docker push ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}"
-                            sh "echo 'Pushed ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}'"
+                            sh "docker push ${ECR_REGISTRY}/${serviceO}:${IMAGE_TAG}"
+                            sh "echo 'Pushed ${ECR_REGISTRY}/${service}:${IMAGE_TAG}'"
                         }
                     }
                 }
@@ -92,28 +92,28 @@ pipeline {
         // }
 
         
-        stage('Update Deployment File') {
-            environment {
-                GIT_REPO_NAME = "StreamingApp"
-                GIT_USER_NAME = "vikramhemchandar"
-            }
-            steps {
-                // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
-                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    sh '''
-                        # Bypass the Git security block first
-                        git config --global --add safe.directory '*'
+        // stage('Update Deployment File') {
+        //     environment {
+        //         GIT_REPO_NAME = "StreamingApp"
+        //         GIT_USER_NAME = "vikramhemchandar"
+        //     }
+        //     steps {
+        //         // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
+        //         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+        //             sh '''
+        //                 # Bypass the Git security block first
+        //                 git config --global --add safe.directory '*'
                         
-                        git config user.email "vikramhemchandar@gmail.com"
-                        git config user.name "Vikram Hem Chandar"
-                        BUILD_NUMBER=${BUILD_NUMBER}
-                        sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" k8s/auth-deployment-service.yml
-                        git add k8s/auth-deployment-service.yml
-                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                    '''
-                }   
-            }
-        } 
+        //                 git config user.email "vikramhemchandar@gmail.com"
+        //                 git config user.name "Vikram Hem Chandar"
+        //                 BUILD_NUMBER=${BUILD_NUMBER}
+        //                 sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" k8s/auth-deployment-service.yml
+        //                 git add k8s/auth-deployment-service.yml
+        //                 git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+        //                 git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+        //             '''
+        //         }   
+        //     }
+        // } 
     }
 }
