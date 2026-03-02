@@ -56,56 +56,17 @@ pipeline {
             }
         }
         
-        // stage('Deploy (Update Kubernetes Manifests)') {
-        //     steps {
-        //         script {
-        //             sh """
-        //             # Bypass the Git security block first
-        //             git config --global --add safe.directory '*'
-                    
-        //             # Setup Git identity
-        //             git config user.name "Vikram Hem Chandar"
-        //             git config user.email "vikramhemchandar@gmail.com"
-                    
-        //             # FIXED: Checkout the main branch locally BEFORE modifying files
-        //             git checkout main
-        //             # Pull any latest changes from GitHub just in case
-        //             git pull origin main
-        //             """
-
-        //             def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']
-                    
-        //             for (String service : services) {
-        //                 // FIXED: Changed '*.yaml' to '*.yml' so it finds your actual files!
-        //                 sh "find k8s -name '*.yml' -type f -exec sed -i \"s|image: .*/${ECR_REPO}:${service}-.*|image: ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}|\" {} +"
-        //                 sh "echo 'Pushed ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}'"
-        //             }
-                    
-        //             sh """
-        //             echo "Updating K8s manifests for all services with tag: ${IMAGE_TAG}"
-                    
-        //             # Commit the changes (We added || true so it doesn't crash if no changes happened)
-        //             git commit -am 'WIP: update K8s manifests for all services with tag: ${IMAGE_TAG}' || true
-        //             """
-                    
-        //             withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-        //                 sh "git push origin main"
-        //             }
-        //         }
-        //     }
-        // }
-
-        
         stage('Update Deployment File') {
             environment {
                 GIT_REPO_NAME = "StreamingApp"
                 GIT_USER_NAME = "vikramhemchandar"
             }
             steps {
-                // FIXED: Use string binding because 'github' is saved as Secret Text in Jenkins!
-                //  sed -i "s/replaceImageTag/${IMAGE_TAG}/g" k8s/auth-deployment-service.yml
-
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
+                    for (String service : services) {
+                        sh "sed -i \"s|image: .*|image: ${ECR_REGISTRY}/${service}:${IMAGE_TAG}|g\" k8s/${service}-deployment-service.yml"
+                    }
                     sh '''
                         # Bypass the Git security block first
                         git config --global --add safe.directory '*'
@@ -113,9 +74,7 @@ pipeline {
                         git config user.email "vikramhemchandar@gmail.com"
                         git config user.name "Vikram Hem Chandar"
 
-                        sed -i "s|image: .*|image: ${ECR_REGISTRY}/auth:${IMAGE_TAG}|g" k8s/auth-deployment-service.yml
-
-                        git add k8s/auth-deployment-service.yml
+                        git add .
                         # Added '|| true' so the pipeline doesn't crash if the file is already up to date!
                         git commit -m "Update deployment image to version ${IMAGE_TAG}" || true
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
