@@ -62,25 +62,32 @@ pipeline {
                 GIT_USER_NAME = "vikramhemchandar"
             }
             steps {
-                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    sh """
-                        # Bypass the Git security block first
-                        git config --global --add safe.directory '*'
+                script {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            # Bypass the Git security block first
+                            git config --global --add safe.directory '*'
+                            
+                            git config user.email "vikramhemchandar@gmail.com"
+                            git config user.name "Vikram Hem Chandar"
+                            
+                            git checkout main
+                            git pull origin main
+                        """
+
+                        def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
+                        for (String service : services) {
+                            sh "sed -i \"s|image: .*|image: ${ECR_REGISTRY}/${service}:${IMAGE_TAG}|g\" k8s/${service}-deployment-service.yml"
+                        }
                         
-                        git config user.email "vikramhemchandar@gmail.com"
-                        git config user.name "Vikram Hem Chandar"
-                    """
-                    def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
-                    for (String service : services) {
-                        sh "sed -i \"s|image: .*|image: ${ECR_REGISTRY}/${service}:${IMAGE_TAG}|g\" k8s/${service}-deployment-service.yml"
-                    }
-                    sh """
-                        git add .
-                        # Added '|| true' so the pipeline doesn't crash if the file is already up to date!
-                        git commit -m "Update deployment image to version ${IMAGE_TAG}" || true
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                    """
-                }   
+                        sh """
+                            git add .
+                            # Added '|| true' so the pipeline doesn't crash if the file is already up to date!
+                            git commit -m "Update deployment image to version ${IMAGE_TAG}" || true
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        """
+                    }   
+                }
             }
         }  
     }
