@@ -58,19 +58,27 @@ pipeline {
                     def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']
                     
                     for (String service : services) {
-                        sh "find k8s -name '*.yaml' -type f -exec sed -i \"s|image: .*/${ECR_REPO}:${service}-.*|image: ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}|\" {} +"
+                        // FIXED: Changed '*.yaml' to '*.yml' so it finds your actual files!
+                        sh "find k8s -name '*.yml' -type f -exec sed -i \"s|image: .*/${ECR_REPO}:${service}-.*|image: ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}|\" {} +"
+                        sh "echo 'Pushed ${ECR_REGISTRY}/${ECR_REPO}:${service}-${IMAGE_TAG}'"
                     }
                     
                     sh """
                     echo "Updating K8s manifests for all services with tag: ${IMAGE_TAG}"
                     
-                    # Add this line to bypass the Git security block!
+                    # Bypass the Git security block!
                     git config --global --add safe.directory '*'
                     
                     git config user.name "Vikram Hem Chandar"
                     git config user.email "vikramhemchandar@gmail.com"
                     
-                    git commit -am 'WIP: update K8s manifests for all services with tag: ${IMAGE_TAG}'
+                    # FIXED: Checkout the main branch locally so we aren't in a detached HEAD state!
+                    git checkout main
+                    # Pull any latest changes from GitHub just in case
+                    git pull origin main
+                    
+                    # Commit the changes (We added || true so it doesn't crash if no changes happened)
+                    git commit -am 'WIP: update K8s manifests for all services with tag: ${IMAGE_TAG}' || true
                     """
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
