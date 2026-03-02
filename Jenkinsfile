@@ -62,6 +62,10 @@ pipeline {
                     
                     sh """
                     echo "Updating K8s manifests for all services with tag: ${IMAGE_TAG}"
+                    
+                    # Add this line to bypass the Git security block!
+                    git config --global --add safe.directory '*'
+                    
                     git config user.name "Vikram Hem Chandar"
                     git config user.email "vikramhemchandar@gmail.com"
                     
