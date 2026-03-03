@@ -106,6 +106,27 @@ aws ecr list-images --repository-name streaming --region ap-south-1 --query "ima
 
 ### Kubernetes Secrets Management
 
+**Generate a Secure Random JWT Secret String:**
+*Explanation:* Uses Node.js's built-in crypto module to generate a cryptographically secure 64-character hexadecimal string. Perfect for use as a JWT secret or temporary password.
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Create a Custom Application Configuration Secret:**
+*Explanation:* Instead of storing API keys directly inside a `ConfigMap` or `.yml` file, this command creates a highly secure, encrypted Kubernetes `Secret` (`streamingapp-secrets`) directly from your terminal. Replace the strings in quotes with your actual keys.
+```bash
+kubectl create secret generic streamingapp-secrets \
+  --from-literal=AWS_ACCESS_KEY_ID="Put_Your_Real_AWS_Access_Key_Here" \
+  --from-literal=AWS_SECRET_ACCESS_KEY="Put_Your_Real_AWS_Secret_Access_Key_Here" \
+  --from-literal=JWT_SECRET="super_secret_jwt_key_123"
+```
+
+**Patch default ServiceAccount to Automatically Pull AWS Images:**
+*Explanation:* Instead of attaching `imagePullSecrets` to every single deployment YAML file, this patches the actual `default` Kubernetes Service Account to permanently enforce using the `regcred` secret we created whenever any pod tries to pull a private Docker image.
+```bash
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "regcred"}]}'
+```
+
 **Create a Docker Registry Secret (Bypassing Docker Desktop Password Bug):**
 *Explanation:* If Kubernetes cannot pull images because of Mac Docker Desktop permission issues, this command manually creates a Kubernetes `Secret` named `regcred` containing the raw AWS ECR password directly inside the cluster. Kubernetes uses this secret to authenticate with AWS when pulling your images.
 ```bash
@@ -133,6 +154,20 @@ kubectl exec -it $(kubectl get pod -l component=database -o jsonpath='{.items[0]
 *Explanation:* Once inside the database, this MongoDB command searches the `users` collection for your exact email address and uses `$set` to change your role from a standard user to an `admin`.
 ```javascript
 db.users.updateOne({ email: "your_email@example.com" }, { $set: { role: "admin" } });
+```
+
+### Advanced Restart & Nuclear Deletion Commands
+
+**Rollout Restart Multiple Deployments Instantly:**
+*Explanation:* This is the cleanest way to restart a running application cluster instantly without losing traffic or dropping requests. It performs a zero-downtime rolling restart, shutting down the old pods exactly as the new ones come online.
+```bash
+kubectl rollout restart deployment admin-service-deployment auth-service-deployment chat-service-deployment streaming-service-deployment frontend-deployment
+```
+
+**Delete Entire Local Directory of Kubernetes Configurations:**
+*Explanation:* Command used to completely vaporize all the physical `.yaml` files applied via `kubectl apply -f k8s/`. This is essentially the self-destruct mechanism when migrating an application to Helm.
+```bash
+kubectl delete -f k8s/
 ```
 ---
 ## ⭐ Important Future Commands (Cheat Sheet)
