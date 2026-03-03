@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: admin-service
-          image: 796786461592.dkr.ecr.ap-south-1.amazonaws.com/vikramhemchandar/streamingapp:admin-v1.0.12
+          image: 796786461592.dkr.ecr.ap-south-1.amazonaws.com/admin:v1.0.970
           ports:
             - containerPort: 3003
           envFrom:
