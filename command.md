@@ -42,12 +42,3 @@ aws ecr list-images --repository-name streaming --region ap-south-1 --query "ima
 
 Pull an image from ECR
 aws ecr get-download-url-for-layer --repository-name streaming --region ap-south-1 --layer-digest sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-
-Open a new terminal window on your Mac.
-Connect directly into your live Kubernetes MongoDB pod by copy-pasting this command:
-bash
-kubectl exec -it $(kubectl get pod -l component=database -o jsonpath='{.items[0].metadata.name}') -- mongosh streamingapp
-
-Once you are inside the database terminal, run this exact command, but make sure to put the email address you just signed up with inside the quotes:
-javascript
-db.users.updateOne({ email: "your_email@example.com" }, { $set: { role: "admin" } });

@@ -90,3 +90,64 @@ These are commands we didn't explicitly use today, but you will **absolutely** n
 
 * **`kompose convert -f docker-compose.yml`**
   * The command line tool that reads a `docker-compose.yml` file and automatically translates it and generates Kubernetes YAML files for you! Great for getting a starting point for a new project.
+
+---
+
+## 🔐 6. Advanced Kubernetes & AWS Management Commands
+
+### Extracting the JWT Secret from AWS Parameter Store
+*Explanation:* AWS Systems Manager Parameter Store is used to securely store sensitive strings. This command queries AWS for the exact value of your `JWT_SECRET`, decrypts it using `--with-decryption`, and outputs just the text value.
+```bash
+aws ssm get-parameter --name "/streamingapp/JWT_SECRET" --with-decryption --query "Parameter.Value" --output text
+```
+
+### AWS Elastic Container Registry (ECR) Commands
+
+**Get AWS ECR Login Password:**
+*Explanation:* Retrieves an authentication token from AWS valid for 12 hours, which is piped into `docker login` so your local Docker daemon can pull/push private images.
+```bash
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 796786461592.dkr.ecr.ap-south-1.amazonaws.com
+```
+
+**List All ECR Repositories:**
+*Explanation:* Queries AWS to list the names of all Docker repositories you have created in the `ap-south-1` region.
+```bash
+aws ecr describe-repositories --region ap-south-1 --query "repositories[].repositoryName" --output text
+```
+
+**List All Image Tags in a Repository:**
+*Explanation:* Lists all the image versions (tags like `v1.0.969`) inside a specific repository named `streaming`.
+```bash
+aws ecr list-images --repository-name streaming --region ap-south-1 --query "imageIds[].imageTag" --output text
+```
+
+### Kubernetes Secrets Management
+
+**Create a Docker Registry Secret (Bypassing Docker Desktop Password Bug):**
+*Explanation:* If Kubernetes cannot pull images because of Mac Docker Desktop permission issues, this command manually creates a Kubernetes `Secret` named `regcred` containing the raw AWS ECR password directly inside the cluster. Kubernetes uses this secret to authenticate with AWS when pulling your images.
+```bash
+kubectl create secret docker-registry regcred \
+  --docker-server=796786461592.dkr.ecr.ap-south-1.amazonaws.com \
+  --docker-username=AWS \
+  --docker-password=$(aws ecr get-login-password --region ap-south-1)
+```
+
+**View Decoded Secrets in Kubernetes:**
+*Explanation:* Kubernetes secrets are easily viewable as base64-encoded strings using `-o yaml`.
+```bash
+kubectl get secret streamingapp-secrets -o yaml
+```
+
+### Direct Database Management (Promoting a User to Admin)
+
+**Access the Live MongoDB Shell inside Kubernetes:**
+*Explanation:* This command uses `kubectl exec` to securely open an interactive terminal (`-it`) directly inside your running `database` pod. It automatically finds the exact pod name using `jsonpath` and launches `mongosh` connected to the `streamingapp` database.
+```bash
+kubectl exec -it $(kubectl get pod -l component=database -o jsonpath='{.items[0].metadata.name}') -- mongosh streamingapp
+```
+
+**Promote a User Account to Administrator (Inside the MongoDB Shell):**
+*Explanation:* Once inside the database, this MongoDB command searches the `users` collection for your exact email address and uses `$set` to change your role from a standard user to an `admin`.
+```javascript
+db.users.updateOne({ email: "your_email@example.com" }, { $set: { role: "admin" } });
+```
