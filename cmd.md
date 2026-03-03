@@ -76,23 +76,6 @@ When an environment gets messy or a ConfigMap gets poisoned, sometimes the faste
 
 ---
 
-## ⭐ Important Future Commands (Cheat Sheet)
-These are commands we didn't explicitly use today, but you will **absolutely** need as you become a master:
-
-* **`kubectl describe pod [pod-name]`**
-  * Extremely detailed output about a single pod. It shows you the injected environment variables, the volume mount statuses, the exact Docker image it pulled, and events specific ONLY to that pod.
-
-* **`kubectl exec -it [pod-name] -- sh`** (or `bash`)
-  * Just like `docker exec`! This opens an interactive terminal *inside* the running Kubernetes Pod container. Amazing for checking if files exist inside the container or using `curl` to test internal networking. 
-
-* **`kubectl config current-context`**
-  * Essential if you start working with multiple clusters (e.g., Local Desktop, AWS Staging, AWS Production). This command prevents you from accidentally deleting Production when you thought you were working Locally!
-
-* **`kompose convert -f docker-compose.yml`**
-  * The command line tool that reads a `docker-compose.yml` file and automatically translates it and generates Kubernetes YAML files for you! Great for getting a starting point for a new project.
-
----
-
 ## 🔐 6. Advanced Kubernetes & AWS Management Commands
 
 ### Extracting the JWT Secret from AWS Parameter Store
@@ -151,3 +134,20 @@ kubectl exec -it $(kubectl get pod -l component=database -o jsonpath='{.items[0]
 ```javascript
 db.users.updateOne({ email: "your_email@example.com" }, { $set: { role: "admin" } });
 ```
+---
+## ⭐ Important Future Commands (Cheat Sheet)
+These are commands we didn't explicitly use today, but you will **absolutely** need as you become a master:
+
+* **`kubectl describe pod [pod-name]`**
+  * Extremely detailed output about a single pod. It shows you the injected environment variables, the volume mount statuses, the exact Docker image it pulled, and events specific ONLY to that pod.
+
+* **`kubectl exec -it [pod-name] -- sh`** (or `bash`)
+  * Just like `docker exec`! This opens an interactive terminal *inside* the running Kubernetes Pod container. Amazing for checking if files exist inside the container or using `curl` to test internal networking. 
+
+* **`kubectl config current-context`**
+  * Essential if you start working with multiple clusters (e.g., Local Desktop, AWS Staging, AWS Production). This command prevents you from accidentally deleting Production when you thought you were working Locally!
+
+* **`kompose convert -f docker-compose.yml`**
+  * The command line tool that reads a `docker-compose.yml` file and automatically translates it and generates Kubernetes YAML files for you! Great for getting a starting point for a new project.
+
+---
