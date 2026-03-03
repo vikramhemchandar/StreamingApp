@@ -68,7 +68,7 @@ spec:
                    key: AWS_CDN_URL
           livenessProbe:
             httpGet:
-              path: /health
+              path: /api/health
               port: 3003
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -77,7 +77,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/health
               port: 3003
             initialDelaySeconds: 5
             periodSeconds: 10

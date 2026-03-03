@@ -4,19 +4,19 @@ global:
 images:
   auth:
     repository: auth
-    tag: v1.0.970
+    tag: v1.0.969
   streaming:
     repository: streaming
-    tag: v1.0.970
+    tag: v1.0.969
   admin:
     repository: admin
-    tag: v1.0.970
+    tag: v1.0.969
   chat:
     repository: chat
-    tag: v1.0.970
+    tag: v1.0.969
   frontend:
     repository: frontend
-    tag: v1.0.970
+    tag: v1.0.969
   database:
     repository: mongo
     tag: latest
