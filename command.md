@@ -29,3 +29,16 @@ kubectl port-forward svc/auth-service-service 3001:3001
 kubectl port-forward svc/streaming-service 3002:3002
 kubectl port-forward svc/admin-service-service 3003:3003
 kubectl port-forward svc/chat-service 3004:3004
+
+#### 4. Fetch ECR images from AWS CLI
+Authenticate with AWS CLI for AWS ECr
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 796786461592.dkr.ecr.ap-south-1.amazonaws.com
+
+List of Repositories in ECR
+aws ecr describe-repositories --region ap-south-1 --query "repositories[].repositoryName" --output text
+
+List of Images in ECR
+aws ecr list-images --repository-name streaming --region ap-south-1 --query "imageIds[].imageTag" --output text
+
+Pull an image from ECR
+aws ecr get-download-url-for-layer --repository-name streaming --region ap-south-1 --layer-digest sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef

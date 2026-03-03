@@ -14,12 +14,14 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: push 796786461592.dkr.ecr.ap-south-1.amazonaws.com/vikramhemchandar/streamingapp:frontend-v1.0.12
+          image: 796786461592.dkr.ecr.ap-south-1.amazonaws.com/frontend:v1.0.970
           ports:
             - containerPort: 80
           envFrom:
             - configMapRef:
                 name: configmap
+            - secretRef:
+                name: secrets
           env:
             - name: REACT_APP_AUTH_API_URL
               valueFrom:

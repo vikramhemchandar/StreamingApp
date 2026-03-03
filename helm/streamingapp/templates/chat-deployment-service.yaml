@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-service-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      component: chat-service
+  template:
+    metadata:
+      labels:
+        component: chat-service
+    spec:
+      containers:
+        - name: chat-service
+          image: "{{ .Values.global.registry }}/{{ .Values.images.chat.repository }}:{{ .Values.images.chat.tag }}"
+          ports:
+            - containerPort: 3004
+          envFrom:
+            - configMapRef:
+                name: configmap
+          env:
+             - name: PORT
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: CHAT_PORT
+             - name: MONGO_URI
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: MONGO_URI
+             - name: JWT_SECRET
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: JWT_SECRET
+             - name: CLIENT_URLS
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: CLIENT_URLS
+             - name: AWS_ACCESS_KEY_ID
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_ACCESS_KEY_ID
+             - name: AWS_SECRET_ACCESS_KEY
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_SECRET_ACCESS_KEY
+             - name: AWS_REGION
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_REGION
+             - name: AWS_S3_BUCKET
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_S3_BUCKET
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+spec:
+  type: ClusterIP
+  selector:
+    component: chat-service
+  ports:
+    - port: 3004
+      targetPort: 3004

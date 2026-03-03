@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chat-service-deployment
+  name: auth-service-deployment
 spec:
-  replicas: 2
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      component: chat-service
+      component: auth-service
   template:
     metadata:
       labels:
-        component: chat-service
+        component: auth-service
     spec:
       containers:
-        - name: chat-service
-          image: 796786461592.dkr.ecr.ap-south-1.amazonaws.com/chat:v1.0.970
+        - name: auth-service
+          image: "{{ .Values.global.registry }}/{{ .Values.images.auth.repository }}:{{ .Values.images.auth.tag }}"
           ports:
-            - containerPort: 3004
+            - containerPort: 3001
           envFrom:
             - configMapRef:
                 name: configmap
@@ -25,7 +25,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: configmap
-                  key: CHAT_PORT
+                  key: AUTH_PORT
             - name: MONGO_URI
               valueFrom:
                 configMapKeyRef:
@@ -33,8 +33,8 @@ spec:
                   key: MONGO_URI
             - name: JWT_SECRET
               valueFrom:
-                secretKeyRef:
-                  name: secrets
+                configMapKeyRef:
+                  name: configmap
                   key: JWT_SECRET
             - name: CLIENT_URLS
               valueFrom:
@@ -43,13 +43,13 @@ spec:
                   key: CLIENT_URLS
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
-                secretKeyRef:
-                  name: secrets
+                configMapKeyRef:
+                  name: configmap
                   key: AWS_ACCESS_KEY_ID
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
-                secretKeyRef:
-                  name: secrets
+                configMapKeyRef:
+                  name: configmap
                   key: AWS_SECRET_ACCESS_KEY
             - name: AWS_REGION
               valueFrom:
@@ -63,8 +63,8 @@ spec:
                   key: AWS_S3_BUCKET
           livenessProbe:
             httpGet:
-              path: /api/health
-              port: 3004
+              path: /health
+              port: 3001
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -72,8 +72,8 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/health
-              port: 3004
+              path: /health
+              port: 3001
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -81,20 +81,20 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
             limits:
-              cpu: "250m"
-              memory: "256Mi"
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: chat-service
+  name: auth-service-service
 spec:
   type: ClusterIP
   selector:
-    component: chat-service
+    component: auth-service
   ports:
-    - port: 3004
-      targetPort: 3004
+    - port: 3001
+      targetPort: 3001

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-deployment
+spec:
+  replicas: {{ .Values.databaseReplicaCount }}
+  selector:
+    matchLabels:
+      component: database
+  template:
+    metadata:
+      labels:
+        component: database
+    spec:
+      containers:
+        - name: database
+          image: "{{ .Values.images.database.repository }}:{{ .Values.images.database.tag }}"
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: database-persistent-storage
+              mountPath: /data/db
+      volumes:
+        - name: database-persistent-storage
+          persistentVolumeClaim:
+            claimName: database-persistent-volume-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database-service
+spec:
+  type: ClusterIP
+  selector:
+    component: database
+  ports:
+    - port: 27017
+      targetPort: 27017

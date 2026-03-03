@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: streaming-service
-          image: 796786461592.dkr.ecr.ap-south-1.amazonaws.com/vikramhemchandar/streamingapp:streaming-v1.0.12
+          image: 796786461592.dkr.ecr.ap-south-1.amazonaws.com/streaming:v1.0.970
           ports:
             - containerPort: 3002
           envFrom:
@@ -33,8 +33,8 @@ spec:
                   key: MONGO_URI
             - name: JWT_SECRET
               valueFrom:
-                configMapKeyRef:
-                  name: configmap
+                secretKeyRef:
+                  name: secrets
                   key: JWT_SECRET
             - name: CLIENT_URLS
               valueFrom:
@@ -43,13 +43,13 @@ spec:
                   key: CLIENT_URLS
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
-                configMapKeyRef:
-                  name: configmap
+                secretKeyRef:
+                  name: secrets
                   key: AWS_ACCESS_KEY_ID
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
-                configMapKeyRef:
-                  name: configmap
+                secretKeyRef:
+                  name: secrets
                   key: AWS_SECRET_ACCESS_KEY
             - name: AWS_REGION
               valueFrom:

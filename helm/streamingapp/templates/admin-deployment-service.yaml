@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      component: admin-service
+  template:
+    metadata:
+      labels:
+        component: admin-service
+    spec:
+      containers:
+        - name: admin-service
+          image: "{{ .Values.global.registry }}/{{ .Values.images.admin.repository }}:{{ .Values.images.admin.tag }}"
+          ports:
+            - containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: configmap
+          env:
+             - name: PORT
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: ADMIN_PORT
+             - name: MONGO_URI
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: MONGO_URI
+             - name: JWT_SECRET
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: JWT_SECRET
+             - name: CLIENT_URLS
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: CLIENT_URLS
+             - name: AWS_ACCESS_KEY_ID
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: AWS_ACCESS_KEY_ID
+             - name: AWS_SECRET_ACCESS_KEY
+               valueFrom:
+                 secretKeyRef:
+                   name: streamingapp-secrets
+                   key: AWS_SECRET_ACCESS_KEY
+             - name: AWS_REGION
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_REGION
+             - name: AWS_S3_BUCKET
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_S3_BUCKET
+             - name: AWS_CDN_URL
+               valueFrom:
+                 configMapKeyRef:
+                   name: configmap
+                   key: AWS_CDN_URL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service-service
+spec:
+  type: ClusterIP
+  selector:
+    component: admin-service
+  ports:
+    - port: 3003
+      targetPort: 3003

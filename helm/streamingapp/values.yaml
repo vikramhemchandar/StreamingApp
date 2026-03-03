@@ -1,0 +1,49 @@
+global:
+  registry: 796786461592.dkr.ecr.ap-south-1.amazonaws.com
+
+images:
+  auth:
+    repository: auth
+    tag: v1.0.970
+  streaming:
+    repository: streaming
+    tag: v1.0.970
+  admin:
+    repository: admin
+    tag: v1.0.970
+  chat:
+    repository: chat
+    tag: v1.0.970
+  frontend:
+    repository: frontend
+    tag: v1.0.970
+  database:
+    repository: mongo
+    tag: latest
+
+configMap:
+  AUTH_PORT: "3001"
+  STREAMING_PORT: "3002"
+  ADMIN_PORT: "3003"
+  CHAT_PORT: "3004"
+  MONGO_URI: "mongodb://database-service:27017/streamingapp"
+  JWT_SECRET: "your_jwt_secret_here"
+  CLIENT_URLS: "http://localhost"
+  AWS_REGION: "ap-south-1"
+  AWS_S3_BUCKET: "vikramhemchandar-streamingapp"
+  AWS_CDN_URL: "http://d1qh6zgebdak3q.cloudfront.net"
+
+ingress:
+  className: "nginx"
+  host: "localhost"
+
+replicaCount: 2
+databaseReplicaCount: 1
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "256Mi"
