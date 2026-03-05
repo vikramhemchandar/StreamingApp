@@ -94,34 +94,34 @@ pipeline {
         
         // Note: This has not been implemented but kept the script for future use.
         // Do not use this stage as it is not working.
-        // Comment the below script if you want to run Jekinsfile.
-        stage('Deploy to EKS via Helm (Direct CD)') {
-            environment {
-                // Ensure Jenkins has the path to Helm and AWSCLI
-                EKS_CLUSTER_NAME = "your-eks-cluster-name" // Replace with your actual EKS cluster name
-            }
-            steps {
-                script {
-                    // Requires AWS credentials installed in Jenkins
-                    withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding', 
-                        credentialsId: env.AWS_CREDS_ID
-                    ]]) {
-                        sh """
-                            # 1. Update Kubeconfig so Jenkins can talk to the EKS Cluster
-                            aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
+        // Comment the below script before running the Jekinsfile.
+        // stage('Deploy to EKS via Helm (Direct CD)') {
+        //     environment {
+        //         // Ensure Jenkins has the path to Helm and AWSCLI
+        //         EKS_CLUSTER_NAME = "your-eks-cluster-name" // Replace with your actual EKS cluster name
+        //     }
+        //     steps {
+        //         script {
+        //             // Requires AWS credentials installed in Jenkins
+        //             withCredentials([[
+        //                 $class: 'AmazonWebServicesCredentialsBinding', 
+        //                 credentialsId: env.AWS_CREDS_ID
+        //             ]]) {
+        //                 sh """
+        //                     # 1. Update Kubeconfig so Jenkins can talk to the EKS Cluster
+        //                     aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
                             
-                            # 2. Deploy or Upgrade the Helm Chart directly into the cluster
-                            helm upgrade --install streamingapp helm/streamingapp \\
-                              --set images.auth.tag=${IMAGE_TAG} \\
-                              --set images.streaming.tag=${IMAGE_TAG} \\
-                              --set images.admin.tag=${IMAGE_TAG} \\
-                              --set images.chat.tag=${IMAGE_TAG} \\
-                              --set images.frontend.tag=${IMAGE_TAG}
-                        """
-                    }
-                }
-            }
-        }
+        //                     # 2. Deploy or Upgrade the Helm Chart directly into the cluster
+        //                     helm upgrade --install streamingapp helm/streamingapp \\
+        //                       --set images.auth.tag=${IMAGE_TAG} \\
+        //                       --set images.streaming.tag=${IMAGE_TAG} \\
+        //                       --set images.admin.tag=${IMAGE_TAG} \\
+        //                       --set images.chat.tag=${IMAGE_TAG} \\
+        //                       --set images.frontend.tag=${IMAGE_TAG}
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
     }
 }

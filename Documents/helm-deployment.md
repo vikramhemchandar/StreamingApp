@@ -21,6 +21,7 @@ helm/streamingapp/
     ├── chat-deployment-service.yaml
     ├── streaming-deployment-service.yaml
     ├── frontend-deployment-service.yaml
+    ├── frontend-nginx-configmap.yaml
     ├── database-deployment-service.yaml
     ├── database-pvc.yaml
     ├── configmap.yaml
