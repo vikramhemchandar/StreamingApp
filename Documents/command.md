@@ -1,3 +1,5 @@
+## List of commands used during this project
+
 Docker push multiple images at once
 docker push --all-tags vikramhemchandar/streamingapp
 
