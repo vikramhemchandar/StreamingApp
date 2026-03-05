@@ -28,8 +28,7 @@ sequenceDiagram
     Jnk->>ECR: docker push (Upload new image)
     
     note over Jnk,EKS: Authentication: Kubeconfig / Service Account
-    Jnk->>EKS: sed (Replace image tag in yaml)
-    Jnk->>EKS: kubectl apply -f deployment.yml
+    Jnk->>EKS: helm upgrade streamingapp (Inject new tag)
     
     EKS->>ECR: Pulls newly built image
     EKS->>EKS: Performs Rolling Update (Swap Old Pods for New Pods)
@@ -109,30 +108,51 @@ sequenceDiagram
 
 ---
 
-### Phase 4: Continuous Deployment (Kubernetes EKS)
-**The Goal:** Tell the production Kubernetes cluster that a new update is ready, and cleanly swap the users over to the new version.
+### Phase 4: Continuous Deployment (GitOps via Helm Values)
+**The Goal:** Tell the production Kubernetes cluster that a new update is ready, and cleanly swap the users over to the new version using an automated GitOps package manager.
 
-* **What Happens:** Jenkins must tell Kubernetes to pull the new `build-42` image. It opens the raw Kubernetes YAML file (e.g., `auth-deployment-service.yml`), searches for the old `image:` string, replaces it with the new ECR URL, and executes `kubectl apply`. Kubernetes then orchestrates a "Rolling Update"—spinning up the new pods and shutting down the old pods only when the new ones report `1/1 READY`.
+* **What Happens:** Jenkins must tell Kubernetes to deploy the new `build` image. Instead of deploying directly or parsing `.yml` files, it leverages **GitOps**. It securely clones the repository, uses `sed` to update the central Master Configuration file (`helm/streamingapp/values.yaml`), and explicitly commits the updated tag back to GitHub (`main` branch). A Kubernetes CD listener (like ArgoCD or Flux) detects this repository update and orchestrates a "Rolling Update".
 * **Jenkinsfile Snippet (Pipeline Code):**
   ```groovy
-  stage('Deploy to Kubernetes') {
-      steps {
-          script {
-              def AWS_TAG = "975050024946.dkr.ecr.ap-south-1.amazonaws.com/streamingapp/auth-service:build-${env.BUILD_ID}"
-              
-              // 1. Swap the placeholder image name in the YAML with the new explicit AWS string.
-              // We use "sed" (Stream Editor), a classic Linux string replacement utility.
-              sh "sed -i 's|IMAGE_PLACEHOLDER|${AWS_TAG}|g' k8s/auth-deployment-service.yml"
-              
-              // 2. Tell Kubernetes to apply the updated configuration
-              sh "kubectl apply -f k8s/auth-deployment-service.yml"
-          }
-      }
-  }
+        stage('Update Deploymen Files - Helm Values (GitOps)') {
+            environment {
+                GIT_REPO_NAME = "StreamingApp"
+                GIT_USER_NAME = "vikramhemchandar"
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            # Bypass the Git security block first
+                            git config --global --add safe.directory '*'
+                            
+                            git config user.email "vikramhemchandar@gmail.com"
+                            git config user.name "Vikram Hem Chandar"
+                            
+                            git checkout main
+                            git pull origin main
+                        """
+
+                        def services = ['auth', 'streaming', 'admin', 'chat', 'frontend']                        
+                        for (String service : services) {
+                            // Uses Alpine sed to find the specific microservice block and safely replace its trailing tag
+                            sh "sed -i \"/^ *${service}:/,/^ *tag:/ s/tag:.*/tag: ${IMAGE_TAG}/\" helm/streamingapp/values.yaml"
+                        }
+                        
+                        sh """
+                            git add .
+                            # Added '|| true' so the pipeline doesn't crash if the file is already up to date!
+                            git commit -m "Update deployment image to version ${IMAGE_TAG}" || true
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        """
+                    }   
+                }   
+            }
+        } 
   ```
 * **Required Access / Setup:**
-  * **Kubeconfig:** The Jenkins server needs a `.kube/config` file to know the IP address of the EKS Master Node.
-  * **AWS EKS Authentication:** Jenkins needs the `aws-iam-authenticator` installed. Its IAM role must be mapped inside the EKS cluster's `aws-auth` ConfigMap so Kubernetes trusts Jenkins as a valid administrator.
+  * **GitHub Token:** Jenkins needs a highly-privileged Personal Access Token to commit source code back to the `main` branch.
+  * **CD Operator:** A GitOps mechanism (like ArgoCD) or another isolated Jenkins job must be watching the repository to run `helm upgrade`.
 
 ---
 
