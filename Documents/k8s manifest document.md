@@ -243,52 +243,126 @@ User's Browser `(localhost:3000)` ➡️ `Service named 'frontend' (port: 3000)`
 ---
 
 ## 🚦 6. The Ingress: The Master Traffic Cop (Single Port Entry)
-**File:** `ingress.yml`  
+**Files:** `streamingapp-ingress.yaml` and `streamingapp-auth-ingress.yaml`
 **Purpose:** Without an Ingress, you have to run `kubectl port-forward` manually for the Frontend (3000), Auth (3001), Streaming (3002), etc. An Ingress acts as a "Reverse Proxy." It opens **one single port** (usually Port 80 for HTTP) and intelligently routes the traffic to the correct Service based on the URL path the user types in!
 
 *Prerequisite: Your cluster must have an Ingress Controller installed (like NGINX Ingress Controller).*
+
+### Why do we have TWO Ingress files?
+Previously, we had one monolithic `ingress.yaml`. However, the React App sends login requests to `/api/auth/login`, but the Node.js backend expects requests strictly at `/api/login`. 
+To solve this routing mismatch, we split the Ingress into two specialized traffic cops:
+
+### A. The General Ingress (`streamingapp-ingress.yaml`)
+This handles standard routing **without altering the URL**. If it sees `/api/admin`, it sends `/api/admin` directly to the Admin service.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: streamingapp-ingress
-  annotations:                    # 1. "Annotations" are special instructions for the Ingress Controller
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  annotations:
+    # Notice: There is NO rewrite-target annotation here! It forwards paths exactly as written.
 spec:
   rules:
-    - host: localhost             # 2. Only listen to traffic heading to 'http://localhost'
+    - host: localhost             # 1. Listen to traffic for 'http://localhost'
       http:
         paths:
-          
-          # --- BACKEND ROUTES ---
-          - path: /api/auth(/|$)(.*) # 3. If someone goes to http://localhost/api/auth/login...
+          # --- STANDARD BACKEND ROUTES ---
+          - path: /api/admin      # 2. If the URL starts with /api/admin...
             pathType: Prefix
             backend:
               service:
-                name: auth-service-service 
+                name: admin-service-service 
                 port:
-                  number: 3001    # 4. ...Secretly send them here to the Auth Service!
-          
-          - path: /api/streaming(/|$)(.*) # 5. Same logic for Streaming!
-            pathType: Prefix
-            backend:
-              service:
-                name: streaming-service
-                port:
-                  number: 3002
-
-          # ... (Similar blocks exist for Admin and Chat services) ...
+                  number: 3003    # 3. ...forward the exact same path to the Admin Service
+                  
+          # ... (Similar blocks exist for Streaming and Chat) ...
 
           # --- FRONTEND ROUTE (Catch-All) ---
-          - path: /()(.*)         # 6. If the URL DID NOT start with /api/...
+          - path: /               # 4. If the URL is anything else (like the root /)
             pathType: Prefix
             backend:
               service:
-                name: frontend
+                name: frontend-service  # 5. Send them to the React app on Port 80
                 port:
-                  number: 80      # 7. ...Assume they want the webpage, send them to the React app!
+                  number: 80
 ```
 
-### Summary of How Ingress Traffic Flows
-User clicks Login ➡️ Browser hits `http://localhost/api/auth/login` ➡️ Ingress sees `/api/auth` ➡️ Forwards secretly to `auth-service-service:3001/login`.
+### B. The Specialized Auth Ingress (`streamingapp-auth-ingress.yaml`)
+This handles the special `/api/auth` route and uses a **Regex Rewrite Rule** to magically chop out the `/auth` part before the traffic hits the Node.js pod.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streamingapp-auth-ingress
+  annotations:
+    # 1. THE MAGIC HIGHLIGHT: Rewrite the URL!
+    # It takes `/api/auth/[ANYTHING]` and safely translates it to `/api/[ANYTHING]`
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /api/auth(/|$)(.*)  # 2. Catch the specific React auth path
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-service-service
+                port:
+                  number: 3001        # 3. Forward to Auth service, but with the rewritten URL above!
+```
+
+---
+
+## 🗺️ 7. The Frontend Nginx ConfigMap (The SPA Router)
+**File:** `frontend-nginx-configmap.yaml`  
+**Purpose:** When you build a React Single Page Application (SPA), the physical files for `/admin` or `/dashboard` don't actually exist on the server. There is only **one** real file: `index.html`. 
+
+If a user hits "Refresh" while on `http://localhost/admin`, the standard Nginx server panics because it can't find a physical folder called "admin." We create this custom `nginx.conf` and mount it into the Frontend Pod to override Nginx's default behavior and teach it how to handle React routing.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config                   # 1. The name of our custom Nginx instructions
+data:
+  nginx.conf: |                                 # 2. The literal contents of the nginx.conf file!
+    server {
+        listen 80;                              # 3. Nginx must listen on its standard Port 80
+        server_name localhost;
+
+        location / {
+            root /usr/share/nginx/html;         # 4. The physical folder where the copied React files live inside Docker
+            index index.html index.htm;
+            
+            # 5. THE MOST IMPORTANT LINE FOR REACT:
+            try_files $uri $uri/ /index.html;   
+        }
+    }
+```
+
+### Explaining `try_files $uri $uri/ /index.html;` (The Tour Guide)
+`try_files` tells Nginx to check for files in a specific order, reading from left to right:
+1. **`$uri`**: "Try to find a literal **file** that exactly matches the URL the user typed." (e.g., if they went to `/logo.png`, check the hard drive to see if `logo.png` exists).
+2. **`$uri/`**: "If that file doesn't exist, try to find a **folder/directory** that exactly matches the URL." (e.g., if they went to `/admin`, check if there is an `admin/` folder on the hard drive).
+3. **`/index.html`**: "If neither the specific file nor the specific folder exists, **do NOT throw a 404 error. Just silently load the main `/index.html` file.**"
+
+### The Layman's Analogy (The Tour Guide)
+Imagine your user walks up to the Nginx Tour Guide and asks to see /admin.
+
+Here is what the Tour Guide does based on that line of code:
+
+1. **`$uri`** (Check for a specific item) Tour Guide thinks: "Did they ask for a specific item, like a painting? Let me check if I have an exact physical file called `admin`." (He checks the hard drive. It's a React app, so he only has `index.html`. He finds nothing).
+
+2. **`$uri/`** (Check for a whole room/folder) Tour Guide thinks: "Okay, maybe `/admin` isn't a single item. Maybe it's an entire room (a directory). Let me check if there's a physical room/folder called `admin/`." (He checks the hard drive again. There are no folders, just the root `index.html`. He finds nothing).
+
+3. **`/index.html`** (The Fallback) Tour Guide thinks: "I don't have an item called admin, and I don't have a room called admin. In the old days, I would scream **404 NOT FOUND**. But my boss gave me a fallback rule! If I can't find what they are looking for, I just drop them in the main lobby (`/index.html`)."
+
+Once Nginx drops them in `/index.html`, the React Javascript wakes up, looks at the user's browser URL (`/admin`), and says, "Ah! Let me draw the Admin Dashboard on the screen for them."
+
+Without that `try_files` line, users can only visit your app by going strictly to `http://localhost/`. If they try to refresh the page while on `http://localhost/admin`, the server will break with a 404 error!
+
+Once Nginx drops the user back into `/index.html`, the React Javascript wakes up inside the user's browser, looks at the URL they originally typed (`/admin`), and dynamically draws the Admin Dashboard on the screen for them!
